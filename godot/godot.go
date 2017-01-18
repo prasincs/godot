@@ -5,6 +5,7 @@ package godot
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -14,6 +15,7 @@ type GraphType string
 type NodeShape string
 type Program string
 type OutputType string
+type Direction string
 
 const (
 	GRAPH_DIRECTED   GraphType = "digraph"
@@ -45,6 +47,11 @@ const (
 	OUT_PNG OutputType = "png"
 	OUT_PS  OutputType = "ps"
 	OUT_SVG OutputType = "svg"
+)
+
+const (
+	DIR_LR Direction = "LR"
+	DIR_RL Direction = "RL"
 )
 
 type Dotter struct {
@@ -145,6 +152,32 @@ func (dotter *Dotter) SetLink(from, to string) error {
 		link = "%s -> %s"
 	}
 	return dotter.sendCmd(link, esc(from), esc(to))
+}
+
+func (dotter *Dotter) SetNodeSep(val float64) error {
+	return dotter.sendCmd(`nodesep=%f`, val)
+}
+
+func (dotter *Dotter) SetRankDir(direction Direction) error {
+	return dotter.sendCmd(`rankdir=%s`, direction)
+}
+
+func (dotter *Dotter) CreateCluster(name string, nodes []string) error {
+	log.Printf("Creating cluster %s with %s", name, nodes)
+	sanitizedNodes := []string{}
+	for _, node := range nodes {
+		sanitizedNodes = append(sanitizedNodes, esc(node))
+	}
+	nodesList := strings.Join(sanitizedNodes, `;`)
+	return dotter.sendCmd(`subgraph cluster_%s {label="%s";%s}`, name, name, nodesList)
+}
+
+func (dotter *Dotter) SetEdgeWeight(val float64) error {
+	return dotter.sendCmd(`edge [weight=%f];`, val)
+}
+
+func (dotter *Dotter) SetRankSep(val float64) error {
+	return dotter.sendCmd(`ranksep=%f`, val)
 }
 
 func (dotter *Dotter) SetLabel(node, label string) error {
