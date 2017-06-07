@@ -55,10 +55,12 @@ const (
 )
 
 type Dotter struct {
-	instance   *exec.Cmd
-	stdin      io.WriteCloser
-	graphType  GraphType
-	isStrict   bool
+	instance  *exec.Cmd
+	stdin     io.WriteCloser
+	graphType GraphType
+	isStrict  bool
+	// If Debug is set to true, it will print out the dot outputs
+	Debug      bool
 	isFirstCmd bool
 }
 
@@ -79,6 +81,9 @@ func (dotter *Dotter) sendCmd(format string, args ...interface{}) error {
 	}
 
 	cmd := fmt.Sprintf(format, args...) + "\n"
+	if dotter.Debug {
+		fmt.Printf("dot> %s", cmd)
+	}
 	_, err := io.WriteString(dotter.stdin, cmd)
 	return err
 }
